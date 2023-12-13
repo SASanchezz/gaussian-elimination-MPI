@@ -8,7 +8,7 @@ import mpi.MPIException;
 public class Main {
     public static void main(String[] args) throws MPIException, IOException, ClassNotFoundException {
         // Matrix size
-        int N = 160;
+        int N = 64;
 
         MPI.Init(args);
 

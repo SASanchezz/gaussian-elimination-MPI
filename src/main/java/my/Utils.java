@@ -11,9 +11,6 @@ public class Utils {
     static MatrixMPI gaussianEliminationForRows(int rank, MatrixMPI mat, int N, int[] rowsToSolve) throws MPIException, IOException, ClassNotFoundException {
         mat = forwardElim(mat, N, rowsToSolve);
 
-        //Matrix after forward
-//        printMatrix(mat);
-
         MatrixMPI solutions = backSubstitution(mat, N, rowsToSolve);
 
         MPI.Finalize();
@@ -51,18 +48,18 @@ public class Utils {
 
 
     static MatrixMPI backSubstitution(MatrixMPI mat, int N, int[] rowsToSolve) throws MPIException, IOException, ClassNotFoundException {
-
+        int[] reversedRowsToSolve = MyMath.reverse(rowsToSolve);
         for (int col = N-1; col >= 0; col--) {
             mat.set(col, N,
                     mat.get(col, N).divide(mat.get(col, col)));
             mat.set(col, col, new Fraction(1));
-            for (int row = col-1; row >= 0; row--) {
-                if (contains(rowsToSolve, row)) {
-//                    mat[row][N] -= mat[row][col] * mat[col][N];
-                    mat.set(row, N,
-                            mat.get(row, N).subtract(mat.get(row, col).multiply(mat.get(col,N))));
-                    mat.set(row, col, new Fraction(0));
+            for (int row: reversedRowsToSolve) {
+                if (row >= col || row < 0) {
+                    continue;
                 }
+                mat.set(row, N,
+                        mat.get(row, N).subtract(mat.get(row, col).multiply(mat.get(col,N))));
+                mat.set(row, col, new Fraction(0));
             }
 
             MatrixMPI procRows = mat.getSubMatrix(rowsToSolve);
@@ -88,15 +85,6 @@ public class Utils {
             }
         }
         return new int[][]{sendCount, displs};
-    }
-
-    public static boolean contains(int[] arr, int el) {
-        for (int arrEl: arr) {
-            if (arrEl == el) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static void initVector(Fraction[] vector, int N) {
